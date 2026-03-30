@@ -4,6 +4,11 @@ All notable changes to this project will be documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1] - 2026-03-30
+
+### Changed
+- README: outcome-focused title, AI/agent pipeline recipes, why-not-DIY section, roadmap, corrected sync timeout wording
+
 ## [0.3.0] - 2026-03-30
 
 ### Added

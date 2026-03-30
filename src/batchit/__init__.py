@@ -17,4 +17,4 @@ from batchit._async import async_batcher
 from batchit._sync import batcher
 
 __all__ = ["batcher", "async_batcher"]
-__version__ = "0.3.0"
+__version__ = "0.3.1"
