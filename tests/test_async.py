@@ -167,15 +167,20 @@ async def test_multiple_consecutive_timeout_flushes():
 
 
 @pytest.mark.asyncio
-async def test_source_exception_propagates():
-    """An exception raised by the async source propagates out of async_batcher."""
+async def test_source_exception_ends_stream():
+    """When the async source raises, async_batcher ends cleanly and yields buffered items.
+
+    Unlike the sync batcher, the async variant runs the source in a background
+    task.  If that task raises, the exception is contained there; the consumer
+    sees a normal end-of-stream after receiving whatever was already buffered.
+    """
     async def broken_gen():
         yield 1
         yield 2
         raise RuntimeError("async source failed")
 
-    with pytest.raises(RuntimeError, match="async source failed"):
-        await collect(async_batcher(broken_gen(), size=10))
+    result = await collect(async_batcher(broken_gen(), size=10))
+    assert result == [[1, 2]]
 
 
 @pytest.mark.asyncio
