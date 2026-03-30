@@ -128,3 +128,53 @@ def test_works_with_non_int_items():
     data = ["a", "b", "c", "d"]
     result = list(batcher(data, size=2))
     assert result == [["a", "b"], ["c", "d"]]
+
+
+# ---------------------------------------------------------------------------
+# real-world patterns
+# ---------------------------------------------------------------------------
+
+def test_kafka_like_consumer():
+    """Burst of items, then a long pause, then more — simulates a Kafka poll loop.
+
+    The sync batcher only checks the timeout when an item arrives, so the pause
+    triggers a flush the moment the next item shows up.
+    """
+    def kafka_consumer():
+        for i in range(3):          # fast burst
+            yield i
+        time.sleep(0.2)             # simulated poll interval (broker quiet)
+        for i in range(3, 5):       # second burst
+            yield i
+
+    result = list(batcher(kafka_consumer(), size=10, timeout=0.1))
+    assert result == [[0, 1, 2], [3, 4]]
+
+
+def test_file_like_iterator():
+    """Works with file-like iterables such as open() or StringIO."""
+    from io import StringIO
+
+    lines = "\n".join(f"line{i}" for i in range(10))
+    result = list(batcher(StringIO(lines), size=3))
+    assert len(result) == 4                          # 3 + 3 + 3 + 1
+    assert sum(len(b) for b in result) == 10
+
+
+def test_multiple_consecutive_timeout_flushes():
+    """Each slow item becomes its own batch — verifies per-flush state reset."""
+    # Items arrive every 0.1 s; timeout 0.05 s → every item triggers a flush
+    result = list(batcher(slow_gen(range(5), 0.1), timeout=0.05))
+    assert sum(len(b) for b in result) == 5
+    assert len(result) >= 3
+
+
+def test_source_exception_propagates():
+    """An exception raised by the source iterator propagates out of batcher."""
+    def broken_gen():
+        yield 1
+        yield 2
+        raise RuntimeError("source failed")
+
+    with pytest.raises(RuntimeError, match="source failed"):
+        list(batcher(broken_gen(), size=10))

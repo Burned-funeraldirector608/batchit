@@ -134,3 +134,65 @@ async def test_items_not_dropped():
     source = list(range(17))
     batches = await collect(async_batcher(agen(source), size=5))
     assert [item for batch in batches for item in batch] == source
+
+
+# ---------------------------------------------------------------------------
+# real-world patterns
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_kafka_like_consumer():
+    """Burst of items, then a long pause, then more — simulates an async Kafka consumer.
+
+    Unlike the sync batcher, the async variant uses asyncio.wait_for internally,
+    so the timeout fires even while the source is stalled between polls.
+    """
+    async def kafka_consumer():
+        for i in range(3):              # fast burst
+            yield i
+        await asyncio.sleep(0.2)        # simulated poll interval (broker quiet)
+        for i in range(3, 5):           # second burst
+            yield i
+
+    result = await collect(async_batcher(kafka_consumer(), size=10, timeout=0.1))
+    assert result == [[0, 1, 2], [3, 4]]
+
+
+@pytest.mark.asyncio
+async def test_multiple_consecutive_timeout_flushes():
+    """Each slow item becomes its own batch — verifies per-flush state reset."""
+    result = await collect(async_batcher(slow_agen(range(5), 0.1), timeout=0.05))
+    assert sum(len(b) for b in result) == 5
+    assert len(result) >= 3
+
+
+@pytest.mark.asyncio
+async def test_source_exception_propagates():
+    """An exception raised by the async source propagates out of async_batcher."""
+    async def broken_gen():
+        yield 1
+        yield 2
+        raise RuntimeError("async source failed")
+
+    with pytest.raises(RuntimeError, match="async source failed"):
+        await collect(async_batcher(broken_gen(), size=10))
+
+
+@pytest.mark.asyncio
+async def test_cancellation_does_not_hang():
+    """Breaking out of the async for loop mid-stream does not hang or leak tasks."""
+    async def infinite_gen():
+        i = 0
+        while True:
+            await asyncio.sleep(0.01)
+            yield i
+            i += 1
+
+    async def consume_two():
+        count = 0
+        async for _ in async_batcher(infinite_gen(), size=2):
+            count += 1
+            if count == 2:
+                break
+
+    await asyncio.wait_for(consume_two(), timeout=2.0)
