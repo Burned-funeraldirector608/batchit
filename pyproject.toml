@@ -12,16 +12,24 @@ requires-python = ">=3.10"
 authors = [
     { name = "Ahmedie-m", email = "61509242+Ahmedie-m@users.noreply.github.com" }
 ]
-keywords = ["batch", "iterator", "streaming", "kafka", "async", "timeout"]
+keywords = ["batch", "iterator", "streaming", "kafka", "async", "timeout", "chunking", "pipeline", "generator", "iterable", "rate-limiting", "data-pipeline"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: Database",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+    "Framework :: AsyncIO",
 ]
 
 [project.urls]
