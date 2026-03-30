@@ -22,13 +22,20 @@ window**: flush whatever you have after *N* seconds, even if the count hasn't
 been reached yet.  Every team writes this boilerplate from scratch.  `batchit`
 is that one `pip install` away.
 
+| | Count limit | Time limit | Async | Dependencies |
+|---|:---:|:---:|:---:|:---:|
+| `batchit` | ✓ | ✓ | ✓ | none |
+| `more-itertools` | ✓ | ✗ | ✗ | 1 |
+| `toolz` | ✓ | ✗ | ✗ | 1 |
+| hand-rolled | maybe | maybe | maybe | — |
+
 ## Installation
 
 ```bash
 pip install batchit
 ```
 
-No runtime dependencies.  Python 3.10+.
+No runtime dependencies.  Python 3.10–3.13.  Fully typed (PEP 561).
 
 ## Usage
 
