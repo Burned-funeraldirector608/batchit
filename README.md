@@ -2,8 +2,8 @@
 
 > Tiny batching for Python pipelines, streams, and agent workflows.
 
-[![PyPI version](https://img.shields.io/pypi/v/batchit.svg)](https://pypi.org/project/batchit/)
-[![Python versions](https://img.shields.io/pypi/pyversions/batchit.svg)](https://pypi.org/project/batchit/)
+[![PyPI version](https://img.shields.io/pypi/v/batchit.svg?cacheSeconds=60)](https://pypi.org/project/batchit/)
+[![Python versions](https://img.shields.io/pypi/pyversions/batchit.svg?cacheSeconds=60)](https://pypi.org/project/batchit/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CI](https://github.com/Ahmedie-m/batchit/actions/workflows/ci.yml/badge.svg)](https://github.com/Ahmedie-m/batchit/actions/workflows/ci.yml)
 
