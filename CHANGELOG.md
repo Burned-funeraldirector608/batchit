@@ -4,6 +4,11 @@ All notable changes to this project will be documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-04-01
+
+### Added
+- `max_weight` and `weight` parameters on both `batcher` and `async_batcher` — flush when the accumulated `weight(item)` sum reaches `max_weight`. Primary use case: LLM token limits, HTTP byte-size limits, variable-size payload batching.
+
 ## [0.3.1] - 2026-03-30
 
 ### Changed
