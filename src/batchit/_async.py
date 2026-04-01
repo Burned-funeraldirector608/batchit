@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, AsyncIterable
+from collections.abc import AsyncGenerator, AsyncIterable, Callable
 from typing import TypeVar
 
 T = TypeVar("T")
@@ -26,9 +26,13 @@ async def async_batcher(
     size: int | None = None,
     timeout: float | None = None,
     maxsize: int = 0,
+    max_weight: float | None = None,
+    weight: Callable[[T], float] | None = None,
 ) -> AsyncGenerator[list[T], None]:
-    """Batch items from *aiterable*, flushing when *size* is reached OR *timeout*
-    seconds have elapsed since the first item in the current batch arrived.
+    """Batch items from *aiterable*, flushing when *size* is reached, *timeout*
+    seconds have elapsed since the first item in the current batch arrived, or
+    the accumulated ``weight(item)`` sum reaches *max_weight* — whichever fires
+    first.
 
     Unlike the synchronous :func:`batcher`, the async variant spawns a small
     background task that drains the source into an internal queue.  The
@@ -36,7 +40,11 @@ async def async_batcher(
     timeout fires the queue consumer is cancelled — not the source generator —
     so no items are ever lost.
 
-    At least one of *size* or *timeout* must be provided.
+    At least one of *size*, *timeout*, or *max_weight* must be provided.
+
+    The weight check runs **before** appending, matching the semantics of the
+    synchronous :func:`batcher` — no batch will exceed *max_weight* except
+    when a single item is heavier than *max_weight* on its own.
 
     Args:
         aiterable: Any async iterable to batch.
@@ -46,13 +54,17 @@ async def async_batcher(
         maxsize: Maximum number of items to buffer in the internal queue before
             the producer blocks.  ``0`` (default) means unbounded.  Set this to
             apply backpressure when the source can outpace the consumer.
+        max_weight: Maximum total weight per batch.  ``None`` means no weight
+            limit.  Must be provided together with *weight*.
+        weight: Callable that returns the numeric weight of a single item.
+            Required when *max_weight* is set.
 
     Yields:
         Non-empty ``list`` of items.
 
     Raises:
-        ValueError: If both *size* and *timeout* are ``None``, or if *maxsize*
-            is negative.
+        ValueError: If none of *size*, *timeout*, *max_weight* are provided, if
+            *maxsize* is negative, or if *max_weight* / *weight* are not paired.
         Exception: Any exception raised by the source is re-raised by the consumer.
 
     Examples:
@@ -65,14 +77,20 @@ async def async_batcher(
         >>> asyncio.run(run())
         [[0, 1, 2], [3, 4, 5], [6]]
     """
-    if size is None and timeout is None:
-        raise ValueError("At least one of 'size' or 'timeout' must be provided.")
+    if (max_weight is None) != (weight is None):
+        raise ValueError("'max_weight' and 'weight' must be provided together.")
+    if size is None and timeout is None and max_weight is None:
+        raise ValueError(
+            "At least one of 'size', 'timeout', or 'max_weight' must be provided."
+        )
     if size is not None and size < 1:
         raise ValueError("'size' must be a positive integer.")
     if timeout is not None and timeout <= 0:
         raise ValueError("'timeout' must be a positive number.")
     if maxsize < 0:
         raise ValueError("'maxsize' must be a non-negative integer.")
+    if max_weight is not None and max_weight <= 0:
+        raise ValueError("'max_weight' must be a positive number.")
 
     queue: asyncio.Queue[object] = asyncio.Queue(maxsize=maxsize)
 
@@ -87,6 +105,7 @@ async def async_batcher(
     task = asyncio.create_task(_producer())
     buf: list[T] = []
     batch_deadline: float | None = None
+    accumulated_weight: float = 0.0
     loop = asyncio.get_running_loop()
 
     try:
@@ -99,6 +118,7 @@ async def async_batcher(
                     if buf:
                         yield buf
                         buf = []
+                        accumulated_weight = 0.0
                     batch_deadline = None
                     continue
             else:
@@ -110,6 +130,7 @@ async def async_batcher(
                 if buf:
                     yield buf
                     buf = []
+                    accumulated_weight = 0.0
                 batch_deadline = None
                 continue
 
@@ -121,15 +142,26 @@ async def async_batcher(
             if isinstance(item, _Error):
                 raise item.exc
 
-            # First item of a new batch — record deadline.
+            item_weight = weight(item) if weight is not None else 0.0  # type: ignore[arg-type]
+
+            # Weight check runs BEFORE appending (same semantics as sync batcher).
+            if max_weight is not None and buf and accumulated_weight + item_weight > max_weight:
+                yield buf
+                buf = []
+                accumulated_weight = 0.0
+                batch_deadline = None
+
+            # First item of a new batch after a weight flush — record deadline.
             if not buf and timeout is not None:
                 batch_deadline = loop.time() + timeout
 
             buf.append(item)  # type: ignore[arg-type]
+            accumulated_weight += item_weight
 
             if size is not None and len(buf) >= size:
                 yield buf
                 buf = []
+                accumulated_weight = 0.0
                 batch_deadline = None
 
     finally:
